@@ -23,6 +23,7 @@ class TestRelationExtractor(BaseModelTest):
         max_epochs=4,
         mini_batch_size=2,
         learning_rate=0.1,
+        use_amp=True,
     )
 
     @pytest.fixture

@@ -10,7 +10,7 @@ from tests.model_test_utils import BaseModelTest
 class TestEntityLinker(BaseModelTest):
     model_cls = EntityLinker
     train_label_type = "nel"
-    training_args = dict(max_epochs=2)
+    training_args = dict(max_epochs=2, use_amp=True)
 
     @pytest.fixture
     def embeddings(self):

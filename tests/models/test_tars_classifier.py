@@ -11,7 +11,7 @@ class TestTarsClassifier(BaseModelTest):
     model_cls = TARSClassifier
     train_label_type = "class"
     model_args = dict(task_name="2_CLASS")
-    training_args = dict(mini_batch_size=1, max_epochs=2)
+    training_args = dict(mini_batch_size=1, max_epochs=2, use_amp=True)
     pretrained_model = "tars-base"
 
     @pytest.fixture

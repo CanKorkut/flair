@@ -15,6 +15,7 @@ class TestSequenceTagger(BaseModelTest):
         max_epochs=2,
         learning_rate=0.1,
         mini_batch_size=2,
+        use_amp=True,
     )
     model_args = dict(
         hidden_size=64,
