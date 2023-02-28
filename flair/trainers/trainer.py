@@ -4,7 +4,7 @@ import datetime
 import inspect
 import logging
 import os
-import sys
+import random
 import time
 import warnings
 from inspect import signature
@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
+from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 from transformer_smaller_training_vocab import reduce_train_vocab
@@ -21,11 +22,6 @@ from flair.models import FewshotClassifier
 from flair.nn import Model
 from flair.nn.model import ReduceTransformerVocabMixin
 
-try:
-    from apex import amp
-except ImportError:
-    amp = None
-
 import random
 
 from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
@@ -34,6 +30,7 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
+from flair.nn import Model
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
     AnnealOnPlateau,
@@ -110,7 +107,6 @@ class ModelTrainer:
         num_workers: Optional[int] = None,
         sampler=None,
         use_amp: bool = False,
-        amp_opt_level: str = "O1",
         eval_on_train_fraction: Union[float, str] = 0.0,
         eval_on_train_shuffle: bool = False,
         save_model_each_k_epochs: int = 0,
@@ -126,6 +122,7 @@ class ModelTrainer:
         tensorboard_log_dir=None,
         metrics_for_tensorboard=[],
         optimizer_state_dict: Optional[Dict[str, Any]] = None,
+        scaler_state_dict: Optional[Dict[str, Any]] = None,
         scheduler_state_dict: Optional[Dict[str, Any]] = None,
         save_optimizer_state: bool = False,
         reduce_transformer_vocab: bool = False,
@@ -233,16 +230,6 @@ class ModelTrainer:
                 use_tensorboard = False
                 pass
 
-        if use_amp:
-            if sys.version_info < (3, 0):
-                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
-            if amp is None:
-                raise RuntimeError(
-                    "Failed to import apex. Please install apex from "
-                    "https://www.github.com/nvidia/apex "
-                    "to enable mixed-precision training."
-                )
-
         if not eval_batch_size:
             eval_batch_size = mini_batch_size
         if mini_batch_chunk_size is None:
@@ -319,10 +306,12 @@ class ModelTrainer:
             # from here on, use list of learning rates
             current_learning_rate: List = [group["lr"] for group in optimizer_instance.param_groups]
 
-            if use_amp:
-                self.model, optimizer_instance = amp.initialize(self.model, optimizer_instance, opt_level=amp_opt_level)
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
 
             optimizer_instance = cast(torch.optim.Optimizer, optimizer_instance)
+
+            if scaler_state_dict:
+                scaler.load_state_dict(scaler_state_dict)
 
             # load existing optimizer state dictionary if it exists
             if optimizer_state_dict:
@@ -546,14 +535,11 @@ class ModelTrainer:
                         # forward and backward for batch
                         for batch_step in batch_steps:
                             # forward pass
-                            loss, datapoint_count = self.model.forward_loss(batch_step)
+                            with torch.autocast(device_type=flair.device.type, dtype=torch.float16, enabled=use_amp):
+                                loss, datapoint_count = self.model.forward_loss(batch_step)
                             average_over += datapoint_count
                             # Backward
-                            if use_amp:
-                                with amp.scale_loss(loss, optimizer_instance) as scaled_loss:
-                                    scaled_loss.backward()
-                            else:
-                                loss.backward()
+                            scaler.scale(loss).backward()
                             train_loss += loss.item()
 
                             # identify dynamic embeddings (always deleted) on first sentence
@@ -564,9 +550,12 @@ class ModelTrainer:
                             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                             store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
 
+                        scaler.unscale_(optimizer)
+
                         # do the optimizer step
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-                        optimizer_instance.step()
+                        scaler.step(optimizer_instance)
+                        scaler.update()
 
                         # do the scheduler step if one-cycle or linear decay
                         if isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
