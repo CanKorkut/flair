@@ -17,20 +17,13 @@ from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 from transformer_smaller_training_vocab import reduce_train_vocab
 
+import flair
+from flair.data import Corpus, Dictionary, _len_dataset
+from flair.datasets import DataLoader
 from flair.embeddings import Embeddings, StackedEmbeddings, TransformerEmbeddings
 from flair.models import FewshotClassifier
 from flair.nn import Model
 from flair.nn.model import ReduceTransformerVocabMixin
-
-import random
-
-from torch.optim.lr_scheduler import OneCycleLR  # type: ignore
-
-import flair
-import flair.nn
-from flair.data import Corpus, Dictionary, _len_dataset
-from flair.datasets import DataLoader
-from flair.nn import Model
 from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
     AnnealOnPlateau,
@@ -48,15 +41,15 @@ log = logging.getLogger("flair")
 class ModelTrainer:
     def __init__(
         self,
-        model: flair.nn.Model,
+        model: Model,
         corpus: Corpus,
     ):
         """
         Initialize a model trainer
-        :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
+        :param model: The model that you want to train. The model should inherit from Model  # noqa: E501
         :param corpus: The dataset used to train the model, should be of type Corpus
         """
-        self.model: flair.nn.Model = model
+        self.model: Model = model
         self.corpus: Corpus = corpus
 
     @staticmethod
@@ -130,7 +123,7 @@ class ModelTrainer:
         **kwargs,
     ) -> dict:
         """
-        Trains any class that implements the flair.nn.Model interface.
+        Trains any class that implements the Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved  # noqa: E501
         :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)  # noqa: E501
         :param mini_batch_size: Size of mini-batches during training  # noqa: E501
@@ -535,7 +528,7 @@ class ModelTrainer:
                         # forward and backward for batch
                         for batch_step in batch_steps:
                             # forward pass
-                            with torch.autocast(device_type=flair.device.type, dtype=torch.float16, enabled=use_amp):
+                            with torch.autocast(device_type=flair.device.type, enabled=use_amp):
                                 loss, datapoint_count = self.model.forward_loss(batch_step)
                             average_over += datapoint_count
                             # Backward
@@ -550,7 +543,7 @@ class ModelTrainer:
                             # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                             store_embeddings(batch, embeddings_storage_mode, dynamic_embeddings)
 
-                        scaler.unscale_(optimizer)
+                        scaler.unscale_(optimizer_instance)
 
                         # do the optimizer step
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
