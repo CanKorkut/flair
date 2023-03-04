@@ -299,7 +299,7 @@ class ModelTrainer:
             # from here on, use list of learning rates
             current_learning_rate: List = [group["lr"] for group in optimizer_instance.param_groups]
 
-            scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp and flair.device.type != "cpu")
 
             optimizer_instance = cast(torch.optim.Optimizer, optimizer_instance)
 
