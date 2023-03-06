@@ -16,7 +16,6 @@ class TestTextClassifier(BaseModelTest):
     multiclass_prediction_labels = ["apple", "tv"]
     training_args = dict(
         max_epochs=4,
-        use_amp=True,
     )
 
     @pytest.fixture

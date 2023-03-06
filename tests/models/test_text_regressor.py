@@ -14,7 +14,6 @@ class TestTextRegressor(BaseModelTest):
         mini_batch_size=2,
         learning_rate=0.1,
         main_evaluation_metric=("correlation", "pearson"),
-        use_amp=True,
     )
 
     def build_model(self, embeddings, label_dict, **kwargs):

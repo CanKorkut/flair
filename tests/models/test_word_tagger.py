@@ -13,7 +13,6 @@ class TestWordTagger(BaseModelTest):
         max_epochs=2,
         learning_rate=0.1,
         mini_batch_size=2,
-        use_amp=True,
     )
 
     def has_embedding(self, sentence):
