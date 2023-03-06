@@ -11,7 +11,7 @@ class TestTarsTagger(BaseModelTest):
     model_cls = TARSTagger
     train_label_type = "ner"
     model_args = dict(task_name="2_NER")
-    training_args = dict(mini_batch_size=1, max_epochs=2, use_amp=True)
+    training_args = dict(mini_batch_size=1, max_epochs=2)
     pretrained_model = "tars-ner"
 
     @pytest.fixture
