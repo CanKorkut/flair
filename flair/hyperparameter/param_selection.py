@@ -171,7 +171,8 @@ class SequenceTaggerParamSelector(ParamSelector):
         training_runs: int = 1,
         optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS,
     ):
-        """
+        """Sequence Tagger hyperparameter selector.
+
         :param corpus: the corpus
         :param tag_type: tag type to use
         :param base_path: the path to the result folder (results will be written to that folder)
@@ -216,8 +217,8 @@ class TextClassifierParamSelector(ParamSelector):
         training_runs: int = 1,
         optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS,
     ):
-        """
-        Text classifier hyperparameter selector that leverages TransformerDocumentEmbeddings
+        """Text classifier hyperparameter selector that leverages TransformerDocumentEmbeddings.
+
         :param corpus: the corpus
         :param label_type: string to identify the label type ('question_class', 'sentiment', etc.)
         :param multi_label: true, if the dataset is multi label, false otherwise

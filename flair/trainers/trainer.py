@@ -54,8 +54,8 @@ class ModelTrainer:
         model: flair.nn.Model,
         corpus: Corpus,
     ):
-        """
-        Initialize a model trainer
+        """Initialize a model trainer.
+
         :param model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
         :param corpus: The dataset used to train the model, should be of type Corpus
         """
@@ -132,8 +132,8 @@ class ModelTrainer:
         shuffle_first_epoch: bool = False,
         **kwargs,
     ) -> dict:
-        """
-        Trains any class that implements the flair.nn.Model interface.
+        """Trains any class that implements the flair.nn.Model interface.
+
         :param base_path: Main path to which all output during training is logged and models are saved  # noqa: E501
         :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)  # noqa: E501
         :param mini_batch_size: Size of mini-batches during training  # noqa: E501
@@ -186,7 +186,6 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-
         # create a model card for this model with Flair and PyTorch version
         model_card: Dict[str, Any] = {
             "flair_version": flair.__version__,
