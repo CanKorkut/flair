@@ -73,13 +73,11 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 
 
 class FlairDatapointDataset(FlairDataset, Generic[DT]):
-    """
-    A simple Dataset object to wrap a List of Datapoints, for example Sentences
-    """
+    """A simple Dataset object to wrap a List of Datapoints, for example Sentences."""
 
     def __init__(self, datapoints: Union[DT, List[DT]]):
-        """
-        Instantiate FlairDatapointDataset
+        """Instantiate FlairDatapointDataset.
+
         :param sentences: DT or List of DT that make up FlairDatapointDataset
         """
         # cast to list if necessary
@@ -104,17 +102,15 @@ class SentenceDataset(FlairDatapointDataset):
 
 
 class StringDataset(FlairDataset):
-    """
-    A Dataset taking string as input and returning Sentence during iteration
-    """
+    """A Dataset taking string as input and returning Sentence during iteration."""
 
     def __init__(
         self,
         texts: Union[str, List[str]],
         use_tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
     ):
-        """
-        Instantiate StringDataset
+        """Instantiate StringDataset.
+
         :param texts: a string or List of string that make up StringDataset
         :param use_tokenizer: Custom tokenizer to use (default is SpaceTokenizer,
         more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library models
@@ -155,8 +151,9 @@ class MongoDataset(FlairDataset):
         in_memory: bool = True,
         tag_type: str = "class",
     ):
-        """
-        Reads Mongo collections. Each collection should contain one document/text per item.
+        """Reads Mongo collections.
+
+        Each collection should contain one document/text per item.
 
         Each item should have the following format:
         {
@@ -181,7 +178,6 @@ class MongoDataset(FlairDataset):
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
-
         # first, check if pymongo is installed
         try:
             import pymongo
