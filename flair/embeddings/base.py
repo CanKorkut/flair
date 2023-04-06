@@ -201,7 +201,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
 
         if tokenizer_data is None:
             # load tokenizer and transformer model
-            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
         else:
             # load tokenizer from inmemory zip-file
             self.tokenizer = self._tokenizer_from_bytes(tokenizer_data)
@@ -219,7 +219,7 @@ class TransformerEmbedding(Embeddings[Sentence]):
             self.truncate = False
 
         self.stride = self.tokenizer.model_max_length // 2 if allow_long_sentences else 0
-        self.allow_long_sentences = allow_long_sentences
+        self.allow_long_sentences = False
         self.use_lang_emb = hasattr(self.model, "use_lang_emb") and self.model.use_lang_emb
 
         # model name
